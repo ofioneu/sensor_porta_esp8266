@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8"></script>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+
+        <script>
+                var socket = io();
+                socket.on('connect', function() {
+                    socket.emit('message', {status: 'CONECTADO!'});
+                });
+                        
+                socket.on('message', function(data) {
+                    console.log("json cru: ", data)
+                    porta=JSON.parse(data)
+                    console.log("Parse: ", porta.Porta_suporte)
+                    //console.log(data)
+                    
+                    document.getElementById("porta").innerHTML=porta
+                    //document.getElementById("ram_total").innerHTML=machine.ram_total
+                    //document.getElementById("cpu_java").innerHTML=machine.cpu_process
+                    //document.getElementById("ram_java").innerHTML=machine.ram_process                          
+                        });
+                
+            </script>
+    <div id = "porta"></div>
+</body>
+</html>
