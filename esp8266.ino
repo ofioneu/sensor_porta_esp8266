@@ -117,6 +117,7 @@ void configWifi()
   html += wifiConfig.gateway[3];
   html += "\" /></p>";
   html += "<p><input name=button1 type=submit value=Enviar /></p>";
+  html += "<p><a href=/>Voltar</a></p>";
   html += "</body></html>";
 
   server.send(200, "text/html", html);
