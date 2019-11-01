@@ -10,7 +10,7 @@
 #define CONFIG_START   6
 
 // ID de Configuração 
-#define CONFIG_VERSION "1b"
+#define CONFIG_VERSION "1c"
 
 // Estrutura de configuração da EEPROM
 struct ConfigStruct
@@ -62,7 +62,6 @@ void loadConfig()
     wifiConfig.ip = IPAddress(192, 168, 1, 147);  
     wifiConfig.gateway = IPAddress(192, 168, 1, 1);
     String url = "http://192.168.1.18:5000/postjson";
-   
     saveConfig();
   }
 }
@@ -267,4 +266,5 @@ void loop() {
     Serial.println("ERRO AO CONECTAR AO WIFI!");
 
   }
+  server.handleClient();
 }
