@@ -23,7 +23,7 @@ struct ConfigStruct
   
 } wifiConfig; //nome da estrutura
 
-ESP8266WebServer server(80); // inicia o servidor na porta 80
+ESP8266WebServer server(80); // inicia o servidor na porta 80 --
 
 
 String urlpost; //variável que guarda a url em formato de string 
