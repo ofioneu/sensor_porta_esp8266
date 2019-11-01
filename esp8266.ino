@@ -2,7 +2,6 @@
 #include <ESP8266HTTPClient.h>
 #include <ArduinoJson.h>
 #include <ESPAsyncTCP.h>
-//#include <ESPAsyncWebServer.h>
 #include <ESP8266WebServer.h>
 #include <EEPROM.h>
 
@@ -16,25 +15,21 @@
 // Estrutura de configuração da EEPROM
 struct ConfigStruct
 {
-  char ssid[50];
-  char senha[50];
-  IPAddress ip;
-  IPAddress gateway;
+  char ssid[50]; //nome da rede
+  char senha[50]; //senha da rede
+  IPAddress ip; // ip do ESP8266
+  IPAddress gateway; // gateway do ESP8266
+  char url[100];    // url para enviar o post da leitura do sensor
   
-} wifiConfig;
+} wifiConfig; //nome da estrutura
 
-ESP8266WebServer server(80);
+ESP8266WebServer server(80); // inicia o servidor na porta 80
 
-const char* PARAM_STRING = "inputString";
-const char* PARAM_INT = "inputInt";
-const char* PARAM_FLOAT = "inputFloat";
 
-const char* PARAM_INPUT_1 = "input1";
-const char* PARAM_INPUT_2 = "input2";
-const char* PARAM_INPUT_3 = "input3";
+String urlpost; //variável que guarda a url em formato de string 
 
-byte door = 4;
-int httpCode;
+byte door = 4; // porta do sensor
+int httpCode; 
 
 
 void saveConfig() 
@@ -49,6 +44,7 @@ void saveConfig()
   EEPROM.commit();
 }
 
+//loop que salva as configurações de rede e urlpost
 void loadConfig()
 {
   if (EEPROM.read(VERSION_START + 0) == CONFIG_VERSION[0] &&
@@ -65,10 +61,13 @@ void loadConfig()
     senha.toCharArray(wifiConfig.senha, 50);
     wifiConfig.ip = IPAddress(192, 168, 1, 147);  
     wifiConfig.gateway = IPAddress(192, 168, 1, 1);
+    String url = "http://192.168.1.18:5000/postjson";
+   
     saveConfig();
   }
 }
 
+//pagina inicial
 void handleRoot() 
 {
   // HTML da pagina principal
@@ -85,6 +84,7 @@ void handleRoot()
   server.send(200, "text/html", html);
 }
 
+// pagina configuração Wifi e urlpost
 void configWifi() 
 {
   String html = "<html><head><title>Configurar WiFi</title>";
@@ -93,7 +93,7 @@ void configWifi()
   html += "<h1>Configurar WiFi</h1>";
   html += "<form method=POST>";
   html += "<p>SSID: <input name=txtSSID type=text value=\"";
-  html += wifiConfig.ssid;
+  html += wifiConfig.ssid; // todas as variaveis exibem as informações já gravadas na eeprom
   html += "\" /></p>";
   html += "<p>Senha: <input name=txtSenha type=text value=\"";
   html += wifiConfig.senha;
@@ -116,12 +116,14 @@ void configWifi()
   html += ".";
   html += wifiConfig.gateway[3];
   html += "\" /></p>";
-  html += "<p><input name=button1 type=submit value=Enviar /></p>";
+  html += "<p>URL POST: <input name=txtURL type=text value=\"";
+  html += wifiConfig.url;
+  html += "\" /></p>";
+  html += "<p><input name=button1 type=submit value=Enviar /></p></form>";
   html += "<p><a href=/>Voltar</a></p>";
   html += "</body></html>";
-
+  
   server.send(200, "text/html", html);
-
 
 }
 
@@ -137,10 +139,12 @@ void configWifiSubmit()
   String senha = server.arg("txtSenha");
   String ip = server.arg("txtIP");
   String gateway = server.arg("txtGateway");
+  String url = server.arg("txtURL");
   ssid.toCharArray(wifiConfig.ssid, 50);
   senha.toCharArray(wifiConfig.senha, 50);
   wifiConfig.ip.fromString(ip);
   wifiConfig.gateway.fromString(gateway);
+  url.toCharArray(wifiConfig.url, 100);
   
   html += "<p>SSID: <b>";
   html += wifiConfig.ssid; 
@@ -154,14 +158,17 @@ void configWifiSubmit()
   html += "<p>Gateway: <b>";
   html += gateway;
   html += "</b></p>";
+  html += "<p>URL POST: <b>";
+  html += wifiConfig.url;
+  html += "</b></p>";
   html += "<form method=GET>";
   html += "<p><input name=button2 type=submit value=Voltar /></p></form>";
   html += "</body></html>";
   
   server.send(200, "text/html", html);
 
-  saveConfig();
-  ESP.restart();
+  saveConfig(); //executa a função que salva as configurações
+  ESP.restart(); // reestarta o ESP8266
 }
 
 //**************************************************************************************************************************
@@ -179,12 +186,10 @@ void setup () {
   IPAddress subnet(255, 255, 255, 0);  
   WiFi.config(wifiConfig.ip, wifiConfig.gateway, subnet); 
   
-  
-  //WiFi.mode(WIFI_STA);
- // WiFi.begin(ssid, senha);
-
+//Declara a porta door como entrada
   pinMode(door, INPUT_PULLUP);
 
+//checa se o Wifi conectou
   while (WiFi.status() != WL_CONNECTED) {
 
     delay(1000);
@@ -222,10 +227,15 @@ void loop() {
   if (WiFi.status() == WL_CONNECTED) { //Check WiFi connection status
 
     HTTPClient http;    //Declare object of class HTTPClient
-
-    http.begin("http://192.168.1.18:5000/postjson");      //Specify request destination
-    http.addHeader("Content-Type", "application/json");  //Specify content-type header
+    urlpost = wifiConfig.url;
+    //http.begin("http://192.168.1.18:5000/postjson");      
+    http.begin(urlpost); //especifica a url de destino
+    Serial.print("URL POST: "); //imprime no munitor serial a url de destino
+    Serial.println(urlpost); //imprime no munitor serial a url de destino
+    http.addHeader("Content-Type", "application/json");  //Especifica o cabeçalho
     //http.addHeader("Content-Type", "text/plain");  //Specify content-type header
+
+    // Abaixo um exemplo para caso precise enviar um json, mas ainda não está terminado
 
     /*const int capacity = 6; //JSON_OBJECT_SIZE(3);
       StaticJsonDocument<capacity> doc;
@@ -235,28 +245,26 @@ void loop() {
       doc["teste3"] = 3;
     */
 
-    if (digitalRead(door) == HIGH) {
-      httpCode = http.POST("PORTA ABERTA");   //Send the request
+    if (digitalRead(door) == HIGH) { //verifica se a porta está em estado alto 
+      httpCode = http.POST("PORTA ABERTA");   //Envia a mensagem para a url especificada em urlpost
 
-      String payload = http.getString();                  //Get the response payload
+      String payload = http.getString();                  //pega a resposta
 
-      Serial.println(httpCode);   //Print HTTP return code
+      Serial.println(httpCode);   //imprime o retorno da requisição
       Serial.println(payload);    //Print request response payload
       //serializeJson(doc, Serial);
       http.end();  //Close connection
     }
+    //se a porta door estiver em LOW retorna que a porta está fechada
     else {
-      httpCode = http.POST("PORTA FECHADA!"); //Send the request
+      httpCode = http.POST("PORTA FECHADA!"); //Envia a mensagem para a url especificada em urlpost
     }
 
-
-
-    delay(1000);  //Send a request every 5 seconds
+    delay(1000);  //Aguarda 1 segundo
   }
   else {
 
     Serial.println("ERRO AO CONECTAR AO WIFI!");
 
   }
-  server.handleClient();
 }
