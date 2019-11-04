@@ -8,7 +8,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
 </head>
-<body>
+<body style="background: rgb(83, 117, 182);" >
 
         <script>
                 var socket = io();
@@ -23,12 +23,15 @@
                     //console.log(data)
                     
                     document.getElementById("porta").innerHTML=porta
-                    //document.getElementById("ram_total").innerHTML=machine.ram_total
-                    //document.getElementById("cpu_java").innerHTML=machine.cpu_process
-                    //document.getElementById("ram_java").innerHTML=machine.ram_process                          
+                                            
                         });
                 
             </script>
-    <div id = "porta" style = "color: black;  width: auto; font-size: x-large;"></div>
+    <div id = "porta" style = "color: black; font-size: 113px; justify-content: center; align-items: center;
+    flex-direction: row;
+    width: 300px;
+    height: 300px;
+    margin-left: 635px;
+    margin-top: 282px;"></div>
 </body>
 </html>
