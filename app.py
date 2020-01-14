@@ -10,22 +10,24 @@ app = Flask(__name__, static_url_path='')
 app.config['SECRET_KEY'] = '@11tahe89!'
 socketio = SocketIO(app)
  
-@app.route('/postjson', methods = ['POST', 'GET'])
+@app.route('/', methods = ['POST', 'GET'])
 def getinformation():
     global a    
     content = str(request.get_data())
-    content = content.replace('b\"','').replace('\"','')
-    #content=content.replace("{'",'{"')
-    a = json.dumps(content)
+    #print(content)
+    content = content.replace('b\"','').replace('\"','').replace("b'", "").replace("'","")
+    content=content.replace("{'",'{"')
+    #a = json.dumps(content)
+    a=content
     print(a)
 
     @socketio.on('message')
     def menssagem(message):
         print(message)
-        while True:     
+        while True:			
             emit('message', a)
             time.sleep(1)
-    return render_template('index.html')
+    return render_template('index1.html')
 
 if __name__ == '__main__':
-    socketio.run(app,host='0.0.0.0', port= 5000)
+    socketio.run(app,host='192.168.1.158', port= 5006, debug=False)
